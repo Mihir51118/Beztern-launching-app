@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500">
+  <rect width="500" height="500" fill="black" />
+  <path 
+    d="M100 100 h300 v300 h-300 v-300 z" 
+    fill="white" 
+    stroke="none"
+  />
+  <g transform="translate(150, 150) scale(0.8)">
+    <path 
+      d="M100,100 C60,100 60,150 100,150 C140,150 140,100 100,100 M200,100 C160,100 160,150 200,150 C240,150 240,100 200,100 M100,100 C140,100 160,150 200,150 C240,150 240,100 200,100 M100,150 C140,150 160,100 200,100 C240,100 240,150 200,150" 
+      fill="black"
+      strokeWidth="15"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </g>
+</svg>
