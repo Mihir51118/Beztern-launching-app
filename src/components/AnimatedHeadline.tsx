@@ -1,11 +1,22 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useMemo } from 'react';
+import { motion, Variants } from 'framer-motion';
 
-export const AnimatedHeadline: React.FC = () => {
-  const headline = "We're Launching Soon";
-  const words = headline.split(' ');
+interface AnimatedHeadlineProps {
+  headline?: string;
+  gradientFrom?: string;
+  gradientTo?: string;
+}
 
-  const container = {
+export const AnimatedHeadline: React.FC<AnimatedHeadlineProps> = ({
+  headline = "We're Launching Soon",
+  gradientFrom = "#ef4444",
+  gradientTo = "#b91c1c",
+}) => {
+  // Memoize words array to avoid recalculations on re-renders
+  const words = useMemo(() => headline.split(' '), [headline]);
+
+  // Container animation variants
+  const container: Variants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
@@ -14,73 +25,79 @@ export const AnimatedHeadline: React.FC = () => {
         staggerChildren: 0.2,
       },
     },
-    // 📈 ADDED: when the entire headline is hovered, tilt it slightly in 3D
     hover: {
-      rotateX: 2,
-      rotateY: -2,
-      transition: { duration: 0.3, ease: 'easeInOut' },
+      rotateX: 3,
+      rotateY: -3,
+      perspective: 1000,
+      transition: { duration: 0.4, ease: 'easeInOut' },
     },
   };
 
-  const item = {
+  // Individual word animation variants
+  const item: Variants = {
     hidden: { opacity: 0, y: 20 },
     visible: {
       opacity: 1,
       y: 0,
       transition: {
-        duration: 0.6,
+        duration: 0.7,
         type: 'spring',
-        stiffness: 100,
+        stiffness: 120,
+        damping: 10,
       },
     },
-    // 📈 ADDED: after “visible,” start a slow “breathing” oscillation
     breathe: {
-      scale: [1, 1.02, 1],
+      scale: [1, 1.03, 1],
       rotate: [0, 1, 0, -1, 0],
       transition: {
-        duration: 4,
+        duration: 5,
         repeat: Infinity,
         ease: 'easeInOut',
+        repeatType: 'reverse',
       },
     },
   };
 
   return (
     <motion.h1
-      className="text-4xl md:text-5xl lg:text-6xl font-bold text-center mb-6 tracking-tight"
+      aria-label={headline}
+      className="text-4xl md:text-5xl lg:text-7xl font-extrabold text-center mb-8 tracking-tight select-none"
       variants={container}
       initial="hidden"
       animate="visible"
-      // 📈 ADDED: allow a hover variant on the container (tilt effect)
       whileHover="hover"
+      style={{ perspective: 1000 }}
     >
       {words.map((word, index) => (
         <motion.span
           key={index}
-          className="relative inline-block mr-2 md:mr-4 bg-gradient-to-r from-red-500 to-red-700 bg-clip-text text-transparent"
+          className="relative inline-block mr-2 md:mr-4 bg-clip-text text-transparent"
+          style={{
+            backgroundImage: `linear-gradient(to right, ${gradientFrom}, ${gradientTo})`,
+          }}
           variants={item}
           whileHover={{
-            // 📈 ADDED: shimmer gradient on hover
+            backgroundImage: `linear-gradient(to right, ${gradientTo}, ${gradientFrom})`,
+            backgroundSize: '200% 100%',
             backgroundPosition: ['0% 50%', '100% 50%'],
-            transition: { duration: 1, ease: 'easeInOut' },
-            textShadow: "0 0 8px rgb(220 38 38 / 0.5)",
+            transition: { duration: 1.2, ease: 'easeInOut' },
+            textShadow: `0 0 10px rgba(239, 68, 68, 0.6)`,
+            scale: 1.05,
           }}
-          // 📈 ADDED: after appearing, move into “breathe” cycle
           animate="breathe"
         >
           {word}
-
-          {/* 📈 ADDED: Underline that draws in from left → right after the word appears */}
           <motion.span
-            className="block h-1 bg-red-500 absolute bottom-[-4px] left-0 right-0"
+            className="block h-[3px] absolute bottom-[-6px] left-0 right-0 rounded-full"
+            style={{ background: gradientFrom }}
             initial={{ scaleX: 0 }}
             animate={{ scaleX: 1 }}
             transition={{
-              duration: 0.5,
-              delay: 0.3 + index * 0.2 + 0.6, // wait for the word’s own entrance
-              ease: 'easeInOut',
+              duration: 0.6,
+              delay: 0.3 + index * 0.2 + 0.7,
+              ease: 'easeOut',
             }}
-            style={{ transformOrigin: 'left' }}
+            style={{ transformOrigin: 'left', background: gradientFrom }}
           />
         </motion.span>
       ))}

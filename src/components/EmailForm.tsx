@@ -1,15 +1,84 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { motion, AnimatePresence, Variants } from 'framer-motion';
 
-export const EmailForm: React.FC = () => {
+interface EmailFormProps {
+  onSubmit?: (email: string) => Promise;
+  darkMode?: boolean;
+  colorScheme?: 'blue' | 'purple' | 'green' | 'red' | 'amber';
+  buttonText?: string;
+  successMessage?: string;
+  placeholderText?: string;
+  className?: string;
+}
+
+export const EmailForm: React.FC = ({
+  onSubmit,
+  darkMode = true,
+  colorScheme = 'blue',
+  buttonText = 'Notify Me',
+  successMessage = 'Thank you! We'll notify you when we launch.',
+  placeholderText = 'Your email address',
+  className = '',
+}) => {
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [status, setStatus] = useState('idle');
   const [errorMessage, setErrorMessage] = useState('');
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [isHovered, setIsHovered] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
+  const inputRef = useRef(null);
+  const formRef = useRef(null);
 
-  const validateEmail = (email: string) =>
-    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  // Color schemes mapping
+  const colorSchemes = {
+    blue: {
+      button: 'from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600',
+      ring: 'focus:ring-blue-500/50',
+      border: 'focus:border-blue-500',
+      success: 'from-green-700 to-green-600',
+      successText: 'text-white',
+      glow: 'shadow-[0_0_15px_rgba(59,130,246,0.5)]'
+    },
+    purple: {
+      button: 'from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600',
+      ring: 'focus:ring-purple-500/50',
+      border: 'focus:border-purple-500',
+      success: 'from-purple-700 to-purple-600',
+      successText: 'text-white',
+      glow: 'shadow-[0_0_15px_rgba(139,92,246,0.5)]'
+    },
+    green: {
+      button: 'from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600',
+      ring: 'focus:ring-emerald-500/50',
+      border: 'focus:border-emerald-500',
+      success: 'from-emerald-700 to-emerald-600',
+      successText: 'text-white',
+      glow: 'shadow-[0_0_15px_rgba(16,185,129,0.5)]'
+    },
+    red: {
+      button: 'from-red-600 to-red-500 hover:from-red-700 hover:to-red-600',
+      ring: 'focus:ring-red-500/50',
+      border: 'focus:border-red-500',
+      success: 'from-red-700 to-red-600',
+      successText: 'text-white',
+      glow: 'shadow-[0_0_15px_rgba(239,68,68,0.5)]'
+    },
+    amber: {
+      button: 'from-amber-500 to-amber-400 hover:from-amber-600 hover:to-amber-500',
+      ring: 'focus:ring-amber-500/50',
+      border: 'focus:border-amber-500',
+      success: 'from-amber-600 to-amber-500',
+      successText: 'text-gray-900',
+      glow: 'shadow-[0_0_15px_rgba(245,158,11,0.5)]'
+    }
+  };
+
+  const colors = colorSchemes[colorScheme];
+  
+  const validateEmail = useCallback((email: string) => {
+    const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    return regex.test(email);
+  }, []);
 
   // Focus input on error
   useEffect(() => {
@@ -18,8 +87,25 @@ export const EmailForm: React.FC = () => {
     }
   }, [status]);
 
+  // Reset form on success after timeout
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (status === 'success') {
+      timer = setTimeout(() => {
+        setStatus('idle');
+      }, 5000);
+    }
+    return () => clearTimeout(timer);
+  }, [status]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!email.trim()) {
+      setStatus('error');
+      setErrorMessage('Please enter your email address.');
+      return;
+    }
 
     if (!validateEmail(email)) {
       setStatus('error');
@@ -30,144 +116,99 @@ export const EmailForm: React.FC = () => {
     setIsSubmitting(true);
     setStatus('idle');
 
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      if (onSubmit) {
+        await onSubmit(email);
+      } else {
+        // Simulate API call if no onSubmit provided
+        await new Promise(resolve => setTimeout(resolve, 1500));
+      }
+      
       setIsSubmitting(false);
       setStatus('success');
       setEmail('');
+    } catch (error) {
+      setIsSubmitting(false);
+      setStatus('error');
+      setErrorMessage('Something went wrong. Please try again.');
+    }
+  };
 
-      // Auto-clear success message after 5s
-      setTimeout(() => {
-        setStatus('idle');
-      }, 5000);
-    }, 1500);
+  // Animation variants
+  const inputVariants: Variants = {
+    idle: { 
+      boxShadow: "0 0 0 rgba(0,0,0,0)",
+    },
+    hover: { 
+      boxShadow: "0 0 10px rgba(255,255,255,0.1)",
+    },
+    focus: { 
+      boxShadow: `0 0 15px rgba(255,255,255,0.15)`,
+    },
+    error: {
+      x: [0, -10, 10, -10, 10, 0],
+      transition: { duration: 0.5 }
+    }
+  };
+
+  const buttonVariants: Variants = {
+    idle: { scale: 1 },
+    hover: { scale: 1.04 },
+    tap: { scale: 0.96 },
+    disabled: { scale: 1, opacity: 0.7 }
+  };
+
+  const successVariants: Variants = {
+    hidden: { opacity: 0, y: 10 },
+    visible: { 
+      opacity: 1, 
+      y: 0, 
+      transition: { 
+        type: "spring", 
+        stiffness: 300, 
+        damping: 20 
+      } 
+    },
+    exit: { 
+      opacity: 0, 
+      y: 10, 
+      transition: { 
+        duration: 0.3 
+      } 
+    }
+  };
+
+  const checkmarkVariants: Variants = {
+    hidden: { pathLength: 0, opacity: 0 },
+    visible: { 
+      pathLength: 1, 
+      opacity: 1, 
+      transition: { 
+        duration: 0.5, 
+        ease: "easeInOut" 
+      } 
+    }
   };
 
   return (
-    <div className="w-full max-w-md mx-auto">
-      <form onSubmit={handleSubmit} className="space-y-5" noValidate>
-        <div className="relative">
-          <input
-            ref={inputRef}
-            type="email"
-            value={email}
-            onChange={(e) => {
-              setEmail(e.target.value);
-              if (status === 'error') setStatus('idle');
-            }}
-            placeholder="Your email address"
-            className={`input-field px-4 py-3 rounded-lg w-full
-              bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900
-              text-white font-semibold text-lg
-              border-2 transition-all duration-300
-              ${
-                status === 'error'
-                  ? 'border-red-500 focus:border-red-400'
-                  : 'border-transparent focus:border-blue-500'
-              }
-              focus:outline-none focus:ring-2 focus:ring-blue-500
-              disabled:opacity-60 disabled:cursor-not-allowed
-            `}
-            disabled={isSubmitting || status === 'success'}
-            aria-label="Email address"
-            aria-invalid={status === 'error'}
-            aria-describedby={status === 'error' ? 'email-error' : undefined}
-            autoComplete="email"
-            spellCheck={false}
-          />
-          <AnimatePresence>
-            {status === 'error' && (
-              <motion.p
-                id="email-error"
-                className="text-red-400 text-sm mt-1 font-medium select-none"
-                initial={{ opacity: 0, y: -5 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -5 }}
-                role="alert"
-              >
-                {errorMessage}
-              </motion.p>
-            )}
-          </AnimatePresence>
-        </div>
+    
+      
+        
+          
+             {
+                setEmail(e.target.value);
+                if (status === 'error') setStatus('idle');
+              }}
+              onFocus={() => setIsFocused(true)}
+              onBlur={() => setIsFocused(false)}
+              onMouseEnter={() => setIsHovered(true)}
+              onMouseLeave={() => setIsHovered(false)}
+              placeholder={placeholderText}
+              className={`
+                px-4 py-3 rounded-lg w-full
+                ${darkMode ? 'bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 text-white' : 'bg-white text-gray-800'}
+                font-medium text-lg
+                border
 
-        <motion.button
-          type="submit"
-          className="btn-primary w-full relative overflow-hidden rounded-lg bg-gradient-to-r from-blue-600 to-blue-500 text-white font-bold py-3 shadow-lg
-            hover:from-blue-700 hover:to-blue-600
-            focus:outline-none focus:ring-4 focus:ring-blue-400
-            disabled:opacity-70 disabled:cursor-not-allowed
-            flex justify-center items-center gap-2"
-          disabled={isSubmitting || status === 'success'}
-          whileHover={isSubmitting || status === 'success' ? {} : { scale: 1.04 }}
-          whileTap={isSubmitting || status === 'success' ? {} : { scale: 0.96 }}
-          aria-live="polite"
-        >
-          {isSubmitting ? (
-            <>
-              <svg
-                className="animate-spin h-5 w-5 text-white"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                ></circle>
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-                ></path>
-              </svg>
-              Processing...
-            </>
-          ) : status === 'success' ? (
-            <>
-              <motion.svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                strokeWidth={3}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="w-6 h-6 text-white"
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-                aria-hidden="true"
-              >
-                <path d="M5 13l4 4L19 7" />
-              </motion.svg>
-              Notification Set!
-            </>
-          ) : (
-            'Notify Me'
-          )}
-        </motion.button>
-      </form>
-
-      <AnimatePresence>
-        {status === 'success' && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
-            className="mt-6 p-4 rounded-lg bg-gradient-to-r from-green-700 to-green-600 text-white text-center font-semibold shadow-lg select-none"
-            role="alert"
-            aria-live="assertive"
-          >
-            Thank you! We'll notify you when we launch.
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-};
+---
+Answer from Perplexity: pplx.ai/share

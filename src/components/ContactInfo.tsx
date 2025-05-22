@@ -1,19 +1,100 @@
 import React from 'react';
-import { motion } from 'framer-motion';
-import { MessageSquare, Phone, Mail } from 'lucide-react';
+import { motion, Variants } from 'framer-motion';
+import { MessageSquare, Phone, Mail, Clock, MapPin, Instagram, Youtube } from 'lucide-react';
 
-const containerVariants = {
+// Define types for better type safety
+interface ContactMethod {
+  href: string;
+  bg: string;
+  icon: React.ReactNode;
+  label: string;
+  ariaLabel: string;
+}
+
+interface SocialLink {
+  href: string;
+  icon: React.ReactNode;
+  label: string;
+}
+
+// Animation variants with TypeScript support
+const containerVariants: Variants = {
   hidden: { opacity: 0, y: 20 },
   visible: (i = 1) => ({
     opacity: 1,
     y: 0,
-    transition: { delay: i * 0.2, duration: 0.6, ease: 'easeOut' },
+    transition: { 
+      delay: i * 0.2, 
+      duration: 0.6, 
+      ease: [0.215, 0.61, 0.355, 1] // Improved easing for smoother animation
+    },
   }),
 };
 
+// Stagger children animation
+const staggerContainer: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.15,
+      delayChildren: 0.3
+    }
+  }
+};
+
+// Child item animation
+const itemVariants: Variants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { 
+    opacity: 1, 
+    y: 0,
+    transition: { duration: 0.5, ease: "easeOut" }
+  }
+};
+
 export const ContactInfo: React.FC = () => {
+  // Contact methods data
+  const contactMethods: ContactMethod[] = [
+    {
+      href: "https://wa.me/919079195956",
+      bg: "bg-emerald-600 hover:bg-emerald-700",
+      icon: <MessageSquare className="w-6 h-6 mr-3" aria-hidden="true" />,
+      label: "Message us on WhatsApp",
+      ariaLabel: "Contact us on WhatsApp"
+    },
+    {
+      href: "tel:+919079195956",
+      bg: "bg-blue-600 hover:bg-blue-700",
+      icon: <Phone className="w-6 h-6 mr-3" aria-hidden="true" />,
+      label: "Call Us",
+      ariaLabel: "Call us at 9079195956"
+    },
+    {
+      href: "mailto:Beztern@gmail.com",
+      bg: "bg-rose-600 hover:bg-rose-700",
+      icon: <Mail className="w-6 h-6 mr-3" aria-hidden="true" />,
+      label: "Email",
+      ariaLabel: "Email us at Beztern@gmail.com"
+    },
+  ];
+
+  // Social links data
+  const socialLinks: SocialLink[] = [
+    {
+      href: "https://www.instagram.com/beztern?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==",
+      icon: <Instagram className="w-7 h-7" aria-hidden="true" />,
+      label: "Instagram"
+    },
+    {
+      href: "http://www.youtube.com/@bezternindia",
+      icon: <Youtube className="w-7 h-7" aria-hidden="true" />,
+      label: "YouTube"
+    }
+  ];
+
   return (
-    <section className="w-full max-w-4xl mx-auto px-6 py-20 bg-gradient-to-tr from-gray-900 via-gray-800 to-gray-900 rounded-3xl shadow-2xl">
+    <section className="w-full max-w-4xl mx-auto px-6 py-20 bg-gradient-to-tr from-gray-900 via-gray-800 to-gray-900 rounded-3xl shadow-2xl border border-gray-800">
       <motion.div 
         className="text-center space-y-5 mb-16"
         initial="hidden"
@@ -21,103 +102,102 @@ export const ContactInfo: React.FC = () => {
         custom={0}
         variants={containerVariants}
       >
-        <h2 className="text-5xl font-extrabold tracking-wide text-white drop-shadow-lg">
+        <h2 className="text-4xl md:text-5xl font-extrabold tracking-wide text-white drop-shadow-lg bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-300">
           Better yet, see us in person!
         </h2>
-        <p className="text-gray-400 text-lg max-w-xl mx-auto leading-relaxed">
+        <p className="text-gray-300 text-lg max-w-xl mx-auto leading-relaxed">
           We love our customers, so feel free to visit during normal business hours.
         </p>
       </motion.div>
 
       <motion.div 
-        className="grid gap-10 md:grid-cols-2 lg:grid-cols-3 mb-16"
+        className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-16"
+        variants={staggerContainer}
         initial="hidden"
         animate="visible"
-        custom={1}
-        variants={containerVariants}
       >
-        {[
-          {
-            href: "https://wa.me/919079195956",
-            bg: "bg-green-600 hover:bg-green-700",
-            icon: <MessageSquare className="w-6 h-6 mr-3" />,
-            label: "Message us on WhatsApp"
-          },
-          {
-            href: "tel:+919079195956",
-            bg: "bg-blue-600 hover:bg-blue-700",
-            icon: <Phone className="w-6 h-6 mr-3" />,
-            label: "Call Us"
-          },
-          {
-            href: "mailto:Beztern@gmail.com",
-            bg: "bg-red-600 hover:bg-red-700",
-            icon: <Mail className="w-6 h-6 mr-3" />,
-            label: "Email"
-          },
-        ].map(({href, bg, icon, label}) => (
+        {contactMethods.map((method) => (
           <motion.a
-            key={label}
-            href={href}
+            key={method.href}
+            href={method.href}
             target="_blank"
             rel="noopener noreferrer"
-            className={`flex items-center justify-center px-8 py-4 rounded-lg text-white font-semibold tracking-wide shadow-lg transition-all duration-300 ${bg} ring-1 ring-transparent hover:ring-white/30`}
-            whileHover={{ scale: 1.05, boxShadow: '0 8px 20px rgba(0,0,0,0.4)' }}
-            whileTap={{ scale: 0.95 }}
+            aria-label={method.ariaLabel}
+            className={`flex items-center justify-center px-8 py-5 rounded-xl text-white font-semibold tracking-wide shadow-lg transition-all duration-300 ${method.bg} backdrop-blur-sm backdrop-saturate-150 ring-1 ring-white/10 hover:ring-white/30`}
+            variants={itemVariants}
+            whileHover={{ 
+              scale: 1.03, 
+              boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
+              y: -5
+            }}
+            whileTap={{ scale: 0.98 }}
           >
-            {icon}
-            <span>{label}</span>
+            {method.icon}
+            <span>{method.label}</span>
           </motion.a>
         ))}
       </motion.div>
 
       <motion.div 
-        className="text-center space-y-8"
+        className="text-center space-y-8 bg-black/20 backdrop-blur-sm p-8 rounded-2xl border border-gray-800/50"
         initial="hidden"
         animate="visible"
         custom={2}
         variants={containerVariants}
       >
-        <h3 className="text-3xl font-bold tracking-wide text-white drop-shadow-md">BEZTERN</h3>
-        <p className="text-gray-400 text-lg tracking-wide uppercase">Sagwara, राजस्थान, भारत</p>
-        <p className="text-2xl font-semibold tracking-wider text-white drop-shadow-md">9079195956</p>
+        <div className="flex flex-col items-center">
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.8, duration: 0.5 }}
+            className="mb-4"
+          >
+            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-red-500 to-red-700 flex items-center justify-center shadow-lg shadow-red-900/30">
+              <h3 className="text-2xl font-bold text-white">B</h3>
+            </div>
+          </motion.div>
+          <h3 className="text-3xl font-bold tracking-wide text-white drop-shadow-md">BEZTERN</h3>
+        </div>
         
-        <div className="space-y-3">
-          <h4 className="text-2xl font-semibold tracking-wide text-white">Hours</h4>
-          <p className="text-gray-400 text-lg">Open today: 09:00 am – 05:00 pm</p>
+        <div className="flex items-center justify-center gap-2 text-gray-300">
+          <MapPin className="w-5 h-5 text-red-500" aria-hidden="true" />
+          <p className="text-lg tracking-wide">Sagwara, राजस्थान, भारत</p>
+        </div>
+        
+        <p className="text-2xl font-semibold tracking-wider text-white drop-shadow-md">
+          <a href="tel:+919079195956" className="hover:text-red-400 transition-colors">9079195956</a>
+        </p>
+        
+        <div className="space-y-3 flex flex-col items-center">
+          <div className="flex items-center gap-2">
+            <Clock className="w-5 h-5 text-red-500" aria-hidden="true" />
+            <h4 className="text-xl font-semibold tracking-wide text-white">Hours</h4>
+          </div>
+          <p className="text-gray-300 text-lg">Open today: 09:00 am – 05:00 pm</p>
         </div>
 
-        <div className="flex justify-center space-x-10 mt-10">
-          {[
-            {
-              href: "https://www.instagram.com/beztern?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==",
-              svg: (
-                <svg className="w-9 h-9" viewBox="0 0 24 24" fill="currentColor" >
-                  <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
-                </svg>
-              )
-            },
-            {
-              href: "http://www.youtube.com/@bezternindia",
-              svg: (
-                <svg className="w-9 h-9" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-                </svg>
-              )
-            }
-          ].map(({href, svg}) => (
-            <motion.a
-              key={href}
-              href={href}
-              target="_blank"
-              rel="noopener noreferrer"
-              whileHover={{ scale: 1.15, color: '#F87171', textShadow: '0 0 8px #F87171' }}
-              whileTap={{ scale: 0.9 }}
-              className="text-red-500 hover:text-red-400 transition-colors duration-300"
-            >
-              {svg}
-            </motion.a>
-          ))}
+        <div className="pt-6 border-t border-gray-800/50">
+          <p className="text-gray-400 mb-4">Connect with us</p>
+          <div className="flex justify-center space-x-6">
+            {socialLinks.map((social) => (
+              <motion.a
+                key={social.href}
+                href={social.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`Visit our ${social.label} page`}
+                className="p-3 bg-gray-800/50 hover:bg-gray-700 rounded-full text-red-500 hover:text-red-400 transition-colors duration-300"
+                whileHover={{ 
+                  scale: 1.15, 
+                  backgroundColor: 'rgba(239, 68, 68, 0.2)',
+                  boxShadow: '0 0 15px rgba(239, 68, 68, 0.5)' 
+                }}
+                whileTap={{ scale: 0.9 }}
+              >
+                {social.icon}
+              </motion.a>
+            ))}
+          </div>
         </div>
       </motion.div>
     </section>
